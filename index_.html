@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sequence AI — v3.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0e0f">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sequence AI">
+</head>
+<body data-theme="neon" data-accent="green" data-font-size="medium" data-blur="high">
+
+<!-- پس‌زمینه -->
+<div class="bg-grid"></div>
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+<div class="bg-glow g3"></div>
+<canvas id="particleCanvas"></canvas>
+
+<!-- نوار اعلان -->
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- نوار بالا -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">∑</div>
+    <div>
+      <div class="brand-name">Sequence <span class="brand-ai">AI</span></div>
+      <div class="brand-ver">v3.0.0 — تحلیل‌گر هوشمند دنباله ریاضی</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" onclick="openCommandPalette()" title="جستجوی سریع (Ctrl+K)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openQA()" title="پرسش و پاسخ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <button class="icon-btn" id="installBtn" onclick="installApp()" title="نصب اپلیکیشن" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <div class="status-dot"></div>
+    <span class="status-text">آنلاین</span>
+    <button class="icon-btn" onclick="openSettings()" title="تنظیمات">
+      <svg class="gear-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- پالت فرمان -->
+<div class="cmd-overlay" id="cmdOverlay" onclick="closeCmdOutside(event)">
+  <div class="cmd-box" id="cmdBox">
+    <div class="cmd-input-row">
+      <span>⌘</span>
+      <input id="cmdInput" placeholder="یک عمل را جستجو کن... (مثلاً تحلیل، نمودار، تنظیمات)" autocomplete="off" oninput="filterCommands()">
+    </div>
+    <div class="cmd-list" id="cmdList"></div>
+  </div>
+</div>
+
+<!-- پنل تنظیمات -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
+  <div class="settings-panel" id="settingsPanel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        تنظیمات
+      </div>
+      <button class="panel-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">🎨 پوسته</div>
+      <div class="theme-grid">
+        <button class="theme-card active" data-theme="neon" onclick="setTheme('neon')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#030712,#0a1628)">
+            <div style="width:20px;height:3px;background:#00ff88;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#00ccff;border-radius:2px"></div>
+          </div>
+          <span>نئون</span>
+        </button>
+        <button class="theme-card" data-theme="aurora" onclick="setTheme('aurora')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#0d0221,#1a0533)">
+            <div style="width:20px;height:3px;background:#c084fc;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#818cf8;border-radius:2px"></div>
+          </div>
+          <span>اورورا</span>
+        </button>
+        <button class="theme-card" data-theme="ocean" onclick="setTheme('ocean')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#020c1b,#0a2540)">
+            <div style="width:20px;height:3px;background:#38bdf8;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#7dd3fc;border-radius:2px"></div>
+          </div>
+          <span>اقیانوس</span>
+        </button>
+        <button class="theme-card" data-theme="ember" onclick="setTheme('ember')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#1a0500,#2d0f00)">
+            <div style="width:20px;height:3px;background:#fb923c;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#fbbf24;border-radius:2px"></div>
+          </div>
+          <span>آتش</span>
+        </button>
+        <button class="theme-card" data-theme="sunset" onclick="setTheme('sunset')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#1a0a1f,#330f1f)">
+            <div style="width:20px;height:3px;background:#fb7185;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#f472b6;border-radius:2px"></div>
+          </div>
+          <span>غروب</span>
+        </button>
+        <button class="theme-card" data-theme="frost" onclick="setTheme('frost')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe)">
+            <div style="width:20px;height:3px;background:#0284c7;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#0369a1;border-radius:2px"></div>
+          </div>
+          <span>یخ</span>
+        </button>
+        <button class="theme-card" data-theme="midnight" onclick="setTheme('midnight')">
+          <div class="tc-preview" style="background:linear-gradient(135deg,#09090b,#18181b)">
+            <div style="width:20px;height:3px;background:#e4e4e7;border-radius:3px;margin-bottom:4px"></div>
+            <div style="width:14px;height:2px;background:#a1a1aa;border-radius:2px"></div>
+          </div>
+          <span>مونوکروم</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">💡 رنگ تاکیدی</div>
+      <div class="accent-row">
+        <button class="acc-btn active" data-accent="green"  style="--c:#00ff88" onclick="setAccentPreset('green','#00ff88','#00cc6a')"><span></span>سبز</button>
+        <button class="acc-btn" data-accent="cyan"   style="--c:#00ccff" onclick="setAccentPreset('cyan','#00ccff','#0099cc')"><span></span>آبی</button>
+        <button class="acc-btn" data-accent="purple" style="--c:#c084fc" onclick="setAccentPreset('purple','#c084fc','#9333ea')"><span></span>بنفش</button>
+        <button class="acc-btn" data-accent="pink"   style="--c:#f472b6" onclick="setAccentPreset('pink','#f472b6','#db2777')"><span></span>صورتی</button>
+        <button class="acc-btn" data-accent="orange" style="--c:#fb923c" onclick="setAccentPreset('orange','#fb923c','#ea580c')"><span></span>نارنجی</button>
+        <button class="acc-btn" data-accent="white"  style="--c:#e4e4e7" onclick="setAccentPreset('white','#e4e4e7','#a1a1aa')"><span></span>سفید</button>
+      </div>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">🔠 اندازه متن</div>
+      <div class="seg-ctrl">
+        <button class="seg-btn" data-size="small" onclick="setFontSize('small')">S</button>
+        <button class="seg-btn active" data-size="medium" onclick="setFontSize('medium')">M</button>
+        <button class="seg-btn" data-size="large" onclick="setFontSize('large')">L</button>
+      </div>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">🌫️ افکت شیشه</div>
+      <div class="seg-ctrl">
+        <button class="seg-btn" data-blur="off" onclick="setBlur('off')">خاموش</button>
+        <button class="seg-btn active" data-blur="high" onclick="setBlur('high')">روشن</button>
+      </div>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">📊 نوع نمودار</div>
+      <div class="seg-ctrl">
+        <button class="seg-btn active" data-chart="scatter" onclick="setChartType('scatter')">خط</button>
+        <button class="seg-btn" data-chart="bar" onclick="setChartType('bar')">میله</button>
+        <button class="seg-btn" data-chart="area" onclick="setChartType('area')">سطح</button>
+      </div>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">✨ ذرات پس‌زمینه</div>
+      <label class="tog-row">
+        <span>فعال</span>
+        <div class="tog on" id="particleTog" onclick="toggleParticles()"><div class="tog-th"></div></div>
+      </label>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">🕸️ شبکه ذرات (اتصال نورونی)</div>
+      <label class="tog-row">
+        <span>فعال</span>
+        <div class="tog on" id="meshTog" onclick="toggleMesh()"><div class="tog-th"></div></div>
+      </label>
+    </div>
+
+    <button class="reset-btn" onclick="resetSettings()">↺ بازنشانی پیش‌فرض</button>
+  </div>
+</div>
+
+<!-- پنل پرسش و پاسخ -->
+<div class="settings-overlay" id="qaOverlay" onclick="closeQAOutside(event)">
+  <div class="settings-panel" id="qaPanel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        پرسش و پاسخ
+      </div>
+      <button class="panel-close" onclick="closeQA()">✕</button>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label">✍️ سوال جدید</div>
+      <input id="qaNewQuestion" type="text" placeholder="سوالت را بنویس..." autocomplete="off" spellcheck="false"
+             onkeydown="if(event.key==='Enter') submitQuestion()" style="width:100%;margin-bottom:10px">
+      <button class="act-primary" style="width:100%;justify-content:center" onclick="submitQuestion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        ثبت سوال
+      </button>
+    </div>
+
+    <div class="s-group">
+      <div class="s-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>💬 سوالات</span>
+        <button onclick="qaRefresh(true)" title="بروزرسانی" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.95rem">⟳</button>
+      </div>
+      <div id="qaList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- محتوای اصلی -->
+<main class="app">
+
+  <section class="hero-section">
+    <div class="hero-tag">// Mathematical Sequence Analyzer · Pattern Recognition Engine</div>
+    <h1 class="hero-h1">دنباله را<br><span class="hero-accent">تحلیل کن</span></h1>
+    <p class="hero-p">الگو را کشف کن، رابطه را بیاب، جمله nام را محاسبه کن و آینده دنباله را پیش‌بینی کن</p>
+    <div class="hero-badges">
+      <span class="hbadge">⚡ هوش مصنوعی</span>
+      <span class="hbadge">📈 نمودار زنده</span>
+      <span class="hbadge">🔢 ۱۵+ نوع دنباله</span>
+      <span class="hbadge">🔮 پیش‌بینی جملات</span>
+    </div>
+  </section>
+
+  <section class="terminal-card">
+    <div class="terminal-bar">
+      <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+      <div class="tb-title">sequence_input.sh</div>
+      <div class="tb-ver">v3.0</div>
+    </div>
+    <div class="terminal-body">
+      <div class="t-prompt">
+        <span class="t-user">user@seq-ai</span><span class="t-sep">:</span><span class="t-path">~</span><span class="t-dollar">$</span>
+        <span class="t-cmd">analyze</span>
+      </div>
+      <div class="input-row">
+        <span class="t-gt">&gt;</span>
+        <input id="sequence" type="text" placeholder="اعداد را با فاصله وارد کن: 1 2 4 8 16 32"
+               autocomplete="off" spellcheck="false"
+               onkeydown="if(event.key==='Enter') analyzeSequence()">
+        <button class="inp-clear" onclick="clearInput()" title="پاک کردن">⌫</button>
+      </div>
+      <div class="examples-row">
+        <span class="ex-lbl">نمونه ← </span>
+        <button class="chip" onclick="fillExample('1 1 2 3 5 8 13 21')">فیبوناچی</button>
+        <button class="chip" onclick="fillExample('2 4 8 16 32 64')">هندسی</button>
+        <button class="chip" onclick="fillExample('1 4 9 16 25 36 49')">مربع‌ها</button>
+        <button class="chip" onclick="fillExample('1 2 6 24 120 720')">فاکتوریل</button>
+        <button class="chip" onclick="fillExample('2 3 5 7 11 13 17')">اعداد اول</button>
+        <button class="chip" onclick="fillExample('3 6 9 12 15 18')">حسابی</button>
+        <button class="chip" onclick="fillExample('1 3 6 10 15 21 28')">مثلثی</button>
+        <button class="chip" onclick="fillExample('2 1 3 4 7 11 18 29')">لوکاس</button>
+        <button class="chip" onclick="fillExample('1 1 2 5 14 42 132')">کاتالان</button>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="act-primary" onclick="analyzeSequence()" id="analyzeBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        اجرا / تحلیل
+      </button>
+      <button class="act-btn" onclick="computeNthTerm()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+        جمله nام
+      </button>
+      <button class="act-btn" onclick="drawChart()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        نمودار
+      </button>
+      <button class="act-btn" onclick="showStats()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        آمار
+      </button>
+      <button class="act-btn" onclick="showAdvanced()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+        تحلیل پیشرفته
+      </button>
+      <button class="act-btn" onclick="calculator()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
+        ماشین حساب
+      </button>
+      <button class="act-btn" onclick="showHistory()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></svg>
+        تاریخچه
+      </button>
+    </div>
+  </section>
+
+  <!-- کارت نتیجه -->
+  <section class="result-terminal" id="resultSection" style="display:none">
+    <div class="terminal-bar">
+      <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+      <div class="tb-title">output.log</div>
+      <button class="tb-copy" onclick="copyResult()" id="copyBtn">📋 کپی</button>
+      <button class="tb-copy" onclick="exportJSON()">⬇ JSON</button>
+    </div>
+    <div class="result-body" id="result"></div>
+  </section>
+
+  <!-- نمودار -->
+  <section class="chart-section" id="chartCard" style="display:none">
+    <div class="terminal-bar">
+      <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+      <div class="tb-title">chart.plot</div>
+      <div class="chart-switcher">
+        <button class="chip" onclick="setChartType('scatter');drawChart()">خط</button>
+        <button class="chip" onclick="setChartType('bar');drawChart()">میله</button>
+        <button class="chip" onclick="setChartType('area');drawChart()">سطح</button>
+        <button class="chip" onclick="downloadChart()">⬇ PNG</button>
+      </div>
+    </div>
+    <div id="plotDiv" style="width:100%;height:360px;padding:12px 0"></div>
+  </section>
+
+  <!-- آمار -->
+  <section class="stats-section" id="statsCard" style="display:none">
+    <div class="terminal-bar">
+      <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+      <div class="tb-title">stats.json</div>
+    </div>
+    <div id="statsBody" class="stats-grid"></div>
+  </section>
+
+  <!-- تحلیل پیشرفته -->
+  <section class="adv-section" id="advCard" style="display:none">
+    <div class="terminal-bar">
+      <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+      <div class="tb-title">deep_analysis.ai</div>
+    </div>
+    <div id="advBody" style="padding:20px 22px"></div>
+  </section>
+
+  <!-- تاریخچه -->
+  <section class="hist-section" id="historyCard" style="display:none">
+    <div class="terminal-bar">
+      <div class="tb-dots"><span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span></div>
+      <div class="tb-title">history.log</div>
+      <button class="tb-copy" onclick="clearHistory()">🗑️ پاک</button>
+    </div>
+    <div id="historyBody" style="padding:16px 18px"></div>
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

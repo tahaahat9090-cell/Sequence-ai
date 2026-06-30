@@ -1,0 +1,27 @@
+{
+  "name": "Sequence AI — تحلیل‌گر هوشمند دنباله ریاضی",
+  "short_name": "Sequence AI",
+  "description": "تحلیل و پیش‌بینی دنباله‌های ریاضی با هوش مصنوعی",
+  "start_url": "./index_.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0e0f",
+  "theme_color": "#0a0e0f",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "fa",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
